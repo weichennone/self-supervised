@@ -26,22 +26,22 @@ class MXENT(BaseMethod):
         h = [self.model(x.cuda(non_blocking=True)) for x in samples]
         h = self.head(torch.cat(h))
         loss = 0
-        uni_dist = self.softmax(torch.zeros(samples.shape))
-        print(samples.shape)
-        print(h.shape, bs)
+        #print("samples sizes", len(samples))
+        uni_dist = self.softmax(torch.zeros(h.shape)).cuda()
+        #print(h.shape, bs)
         for _ in range(self.w_iter):
             z = torch.empty_like(h)
             perm = torch.randperm(bs).view(-1, self.w_size)
             for idx in perm:
                 for i in range(len(samples)):
                     z[idx + i * bs] = self.whitening(h[idx + i * bs])
-            for i in range(len(samples)):
-                loss += self.kldiv(self.logsoftmax(z[i * bs : (i + 1) * bs]), uni_dist)
+            #for i in range(len(samples)):
+            loss += self.kldiv(self.logsoftmax(z), uni_dist)
             # for i in range(len(samples) - 1):
             #     for j in range(i + 1, len(samples)):
             #         x0 = z[i * bs : (i + 1) * bs]
             #         x1 = z[j * bs : (j + 1) * bs]
             #         loss += self.loss_f(x0, x1)
         # loss /= self.w_iter * self.num_pairs
-        exit()
+        #exit()
         return loss
